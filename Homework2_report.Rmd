@@ -6,7 +6,7 @@ output: html_document
 
 ## Name
 
-Please enter your name here.
+Sahithi Uppalapati
 
 ### Setup
 
@@ -15,6 +15,14 @@ Read in the data with `read_csv()` and store the data as an R object named `data
 
 ```{r}
 ## Load the data and any necessary packages here.
+
+library(tidyverse)
+
+maacs <- read_csv("maacs.csv.gz")
+
+glimpse(maacs)
+summary(maacs)
+
 
 ```
 
@@ -33,8 +41,20 @@ NOTE: For this part, do not use any plots.
 ```{r}
 ## Write your function here
 
-```
+fev1_age <- function(dataset) {
+  data <- dataset %>% 
+    filter(!is.na(age), !is.na(fev1))
+  
+  corr <- cor(data$age, data$fev1, method = "pearson")
+  
+  return(corr > 0)
+}
 
+
+fev1_age(maacs)
+
+```
+This outputs True, which shows that FEV1 values in children are higher in older children relative to younger children
 
 ## Part 2
 
@@ -44,13 +64,15 @@ How much does FEV1 change for a 1-year increase in the child's age?
 
 ```{r}
 ## Add your code here
+model <- lm(fev1 ~ age, data = maacs)
+summary(model)
 
 ```
 
 
 Write your data analysis statement interpreting the regression model here:
 
-
+The model above shows that for each 1 year increase in age, FEV! increases approximately by 0.17 liters. This goes to show that older children tend to have better lung function compared to that of younger children.
 
 ## Part 3
 
@@ -65,16 +87,30 @@ NOTE:
 ```{r}
 ## Add your code here
 
+#correlation
+maacs %>% 
+  summarise(corr = cor(age, fev1, use = "complete.obs"))
+
+#regression
+coef(model)["age"]
+
+#plot
+ggplot(maacs, aes(x = age, y = fev1)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Age vs FEV1")
+
+
 ```
 
 
 Write the three supporting premise statements here:
 
-1. 
+1. The correlation between the two variables age and FEV1 is positive, which goes to show that older children have higher lung function
 
-2. 
+2. The regression for the slope is positive, which shows that an additional year of age is associated with an increase in FEV1
 
-3. 
+3. The scatter plot shows an upward trend, which confirms that FEV1 does in fact increase with age.
 
 
 ## Part 4
@@ -90,32 +126,73 @@ For statements involving plots, instead of returning `TRUE` or `FALSE`, you func
 
 ```{r}
 ## Function for supporting premise statement 1
+corr_func <- function(dataset) {
+  corr <- cor(dataset$age, dataset$fev1, use = "complete.obs")
+  return(corr > 0)
+}
 
 ```
 
 
 ```{r}
 ## Function for supporting premise statement 2
+slope_func <- function(dataset) {
+  model <- lm(fev1 ~ age, data = dataset)
+  slope <- coef(model)["age"]
+  return(slope > 0)
+}
+
 
 ```
 
 
 ```{r}
 ## Function for supporting premise statement 3
+plot_func <- function(dataset) {
+  plot1 <- ggplot(dataset, aes(x = age, y = fev1)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = TRUE) +
+    labs(title = "Age vs FEV1")
+  print(plot1)
+  
+  # plot (if statement is true)
+  new_data <- data.frame(
+    age = seq(5, 17, by = 1),
+    fev1 = seq(1.5, 3.5, length.out = 13) + rnorm(13, 0, 0.1)
+  )
+  
+  plot2 <- ggplot(new_data, aes(x = age, y = fev1)) +
+    geom_point(color = "red") +
+    geom_smooth(method = "lm", se = FALSE, color = "red") +
+    labs(title = "Hypothetical Plot (If True)")
+  print(plot2)
+}
 
 ```
 
 Execute each of your function and show that the produce the expected output.
+```{r}
+corr_func(maacs)
+slope_func(maacs)
+plot_func(maacs)
 
+```
 
+In the output above, we can see that we output True showing that the supportive statement is true for the data set. The graphs also support this, with the first plot produces the positive regression and the second plot shows the hypothetical scenario if the statement were to be true.
 
-
-## Part 5
+# Part 5
 
 Describe one alternative to the primary statement "FEV1 values in children are higher in older children relative to younger children". 
 
 Create a fault tree for the alternative outcome describing how the alternative outcome could be realized in the data even if the primary statement were true.
 
 Your fault tree should be created as a separate image and does not need to be created in R. Upload the image of the fault tree to Canvas.
+
+
+My Alternative statement:
+
+FEV1 values in children do not increase with age as other factors like exposure to pollutants or asthma severity may drive differences in lung function
+
+Fault tree is attached in the separate canvas submission
 
 
